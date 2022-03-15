@@ -8,6 +8,7 @@ connect = {
 
 def connect_to_db(connect):
     try:
-        pymysql.connect(**connect)
+        DB = pymysql.connect(**connect)
     except Exception:
         exit('Ошибка подключения к базе данных')
+    return DB
