@@ -21,10 +21,11 @@ def send_welcome_message(message):
         table = types.InlineKeyboardButton(text='Забронировать столик', callback_data='table')
         pizza = types.InlineKeyboardButton(text='Заказать пиццу', callback_data='pizza')
         keyboard.add(pizza,table)
-        bot.reply_to(message,f'Привет, {message.from_user.first_name}. Я бот Secret Pizza Lab. Могу помочь тебе заказать пиццу 🍕 или забронировать столик 🥂',
+        bot.reply_to(message,f'Привет, {message.from_user.first_name}. Я сотрудник Secret Pizza Lab. Могу помочь тебе заказать пиццу 🍕 или забронировать столик 🥂',
                      reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
+@bot.message_handler(func=lambda m: True)
 # Обработчик заказа пиццы
 def pizza_order(call):
     if call.data == 'pizza':
@@ -45,23 +46,20 @@ def pizza_order(call):
         bot.send_message(call.message.chat.id, 'Хорошо, давай выберем пиццу 🍕', reply_markup=keyboard)
 
     if '_pizza_id' in call.data:
-        id = call.data
-        bot.send_message(call.message.chat.id, f'Ты выбрал 🍕 с номером {id}')
+        id = call.data.split('_')[0]
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(types.InlineKeyboardButton(text='Доставка', callback_data='delivery'))
+        keyboard.add(types.InlineKeyboardButton(text='Самовывоз', callback_data='pickup'))
+        bot.send_message(call.message.chat.id, f'Теперь давай определимся как ты получишь свою 🍕', reply_markup=keyboard)
 
 
+    if 'delivery' in call.data or 'pickup' in call.data:
+        bot.send_message(call.message.chat.id, f'Скажи нам свой номер телефона. В ближайшее время мы свяжемся с тобой для уточнения деталей заказа 😊')
 
+    if (call.message.data).isdigit():
+        bot.send_message(call.message.chat.id,f'Спасибо')
 
-
-
-
-
-
-
-
-
-
-
-# Обработка бронирования столика
+    # Обработка бронирования столика
     if call.data == 'table':
         bot.send_message(call.message.chat.id, 'Вы выбрали бронирование столика!')
 
