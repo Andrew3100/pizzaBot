@@ -10,6 +10,7 @@ bot = telebot.TeleBot('5172890739:AAGvRGygRXTX_8vUNLu92oe567ajhsS41aQ')
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome_message(message):
+    # print(message)
     with DB.cursor() as db:
         check_new = f"SELECT * FROM users WHERE username = '{message.from_user.username}'"
         check = db.execute(check_new)
@@ -20,12 +21,14 @@ def send_welcome_message(message):
         keyboard = types.InlineKeyboardMarkup()
         table = types.InlineKeyboardButton(text='Забронировать столик', callback_data='table')
         pizza = types.InlineKeyboardButton(text='Заказать пиццу', callback_data='pizza')
-        keyboard.add(pizza,table)
-        bot.reply_to(message,f'Привет, {message.from_user.first_name}. Я сотрудник Secret Pizza Lab. Могу помочь тебе заказать пиццу 🍕 или забронировать столик 🥂',
+        keyboard.add(pizza, table)
+        bot.reply_to(message,
+                     f'Привет, {message.from_user.first_name}. Я сотрудник Secret Pizza Lab. Могу помочь тебе заказать пиццу 🍕 или забронировать столик 🥂',
                      reply_markup=keyboard)
 
+
+
 @bot.callback_query_handler(func=lambda call: True)
-@bot.message_handler(func=lambda m: True)
 # Обработчик заказа пиццы
 def pizza_order(call):
     if call.data == 'pizza':
@@ -54,21 +57,24 @@ def pizza_order(call):
 
 
     if 'delivery' in call.data or 'pickup' in call.data:
-        bot.send_message(call.message.chat.id, f'Скажи нам свой номер телефона. В ближайшее время мы свяжемся с тобой для уточнения деталей заказа 😊')
-
-    if (call.message.data).isdigit():
-        bot.send_message(call.message.chat.id,f'Спасибо')
+        bot.send_message(call.message.chat.id, f'Скажи нам свой номер телефона. Он пригодится для связи 😊')
 
     # Обработка бронирования столика
-    if call.data == 'table':
+    if call.message.text == 'table':
         bot.send_message(call.message.chat.id, 'Вы выбрали бронирование столика!')
 
 
-
 @bot.message_handler(func=lambda m: True)
-def send_welcome_message(message):
-    bot.reply_to(message, message.text)
-
-bot.polling()
+def tel(message):
+    if '8' in str(message.text) or '7' in str(message.text):
+        with DB.cursor() as db:
+            create_user_sql = f"UPDATE users SET telephone = '{str(message.text)}' WHERE username = '{message.from_user.username}'"
+            print(create_user_sql)
+            db.execute(create_user_sql)
+            DB.commit()
+            bot.send_message(message.chat.id, 'Спасибо, скоро мы выйдем на связь 😊')
+    else:
+        bot.send_message(message.chat.id, 'Ой, кажется прозошла ошибку при вводе номера 🤪. Давай ещё раз 😊')
+bot.polling(none_stop=True)
 
 
